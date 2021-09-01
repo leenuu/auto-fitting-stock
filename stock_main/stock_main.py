@@ -4,6 +4,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from security.encryption_process import encryption_pro
 import win32com.client
+import pandas as pd
 
 class stock:
     def __init__(self, status):
@@ -11,7 +12,7 @@ class stock:
         self.pwd = ''
         self.pwdcert = ''
         self.user_inform = dict()
-        self.fild = []
+        self.fild = [17]
         self.fild_dict = {}
         self.stock_data = dict()
         self.stock_code = list()
@@ -42,14 +43,29 @@ class stock:
             if codes not in self.stock_code:
                 self.stock_code.append(codes)    
 
-    def all_stocks_data(self, code):
-        stock_data = win32com.client.Dispatch("CpSysDib.MarketEye")
-        stock_data.SetInputValue(0, self.fild)    
-        stock_data.SetInputValue(1, [code])
-        stock_data.BlockRequest()
+    def get_stock_data(self, code, day):
+        chart_data = win32com.client.Dispatch("CpSysDib.StockChart")
  
-        
-        
+        chart_data.SetInputValue(0, code)   
+        chart_data.SetInputValue(1, ord('2')) 
+        chart_data.SetInputValue(4, day)
+        chart_data.SetInputValue(5, [0,2,3,4,5, 8]) 
+        chart_data.SetInputValue(6, ord('D')) 
+        chart_data.SetInputValue(9, ord('1')) 
+        chart_data.BlockRequest()
+
+        count = chart_data.GetHeaderValue(3)
+        columns = ['open', 'high', 'low', 'close']
+        index = []
+        rows = []
+        for i in range(count): 
+            index.append(chart_data.GetDataValue(0, i)) 
+            rows.append([chart_data.GetDataValue(1, i), chart_data.GetDataValue(2, i), chart_data.GetDataValue(3, i), chart_data.GetDataValue(4, i)]) 
+
+        stock_data = pd.DataFrame(rows, columns=columns, index=index)
+
+        return stock_data
+
     def check_all_stocks(self):
         objCpCodeMgr = win32com.client.Dispatch("CpUtil.CpCodeMgr")
         codeList = objCpCodeMgr.GetStockListByMarket(1) #거래소, 코스피
@@ -60,10 +76,4 @@ class stock:
             stdPrice = objCpCodeMgr.GetStockStdPrice(code)
             strr += str(name) + ' ' + str(secondCode) + ' ' + str(stdPrice) + '\n'
         print(i, code, secondCode, stdPrice, name)
-
-test = stock(False)
-# test.login()
-test.all_stocks_data('A302440')
-print(test.stock_data)
-
 
