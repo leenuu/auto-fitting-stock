@@ -1,21 +1,15 @@
 import numpy, Connect, os, sys, win32com.client
-from pandas.core import series
 import pandas as pd
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from security.encryption_process import encryption_pro
 
 class stock:
     def __init__(self, status):
-        self.id = ''
-        self.pwd = ''
-        self.pwdcert = ''
-        self.user_inform = dict()
+        self.id, self.pwd, self.pwdcert = '', '', ''
+        self.user_inform, self.stock_data, self.kospi, self.kosdaq = dict(), dict(), dict(), dict()
         self.fild = [17]
         self.fild_dict = {}
-        self.stock_data = dict()
         self.stock_code = list()
-        self.kospi = dict()
-        self.kosdaq = dict()
         self.status = status
         self.chart_data = win32com.client.Dispatch("CpSysDib.StockChart")
 
@@ -79,13 +73,24 @@ class stock:
         return stock_data
 
     def get_bollinger_bands(self, code):
-        stock_data = self.get_stock_data(code, 20)
+        stock_data = self.get_stock_data(code, 400)
         data = stock_data['close']
-        avg = numpy.mean(data)
-        std = numpy.std(data)
-        
-        high_line = avg + (2 * std)
-        mid_line = avg
-        low_line = avg - (2 * std)
-        
-        return {'high' : high_line, 'mid' : mid_line, 'low' : low_line}
+        high_line, low_line, mid_line, width, price = float(), float(), float(), float(), float()
+        temp_data = dict()
+        i = 0
+        while True:
+            start = i
+            end = start + 20
+            if end > 400:
+                break
+            avg = numpy.mean(data.values[start : end])
+            std = numpy.std(data.values[start : end])
+            date = data.index[i]
+            price = data.values[start]
+            high_line = avg + (2 * std)
+            mid_line = avg
+            low_line = avg - (2 * std)
+            width = (high_line - low_line) / mid_line 
+            temp_data[date] = {'high' : high_line, 'mid' : mid_line, 'low' : low_line, 'width' : width, 'price' : price}
+            i += 1
+        return {code : temp_data}
