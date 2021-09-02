@@ -1,10 +1,7 @@
-import Connect
-import os
-import sys
+import numpy, Connect, os, sys, win32com.client
+import pandas as pd
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from security.encryption_process import encryption_pro
-import win32com.client
-import pandas as pd
 
 class stock:
     def __init__(self, status):
@@ -43,6 +40,17 @@ class stock:
             if codes not in self.stock_code:
                 self.stock_code.append(codes)    
 
+    def check_all_stocks(self):
+        objCpCodeMgr = win32com.client.Dispatch("CpUtil.CpCodeMgr")
+        codeList = objCpCodeMgr.GetStockListByMarket(1) #거래소, 코스피
+        strr = ''
+        for i, code in enumerate(codeList):
+            secondCode = objCpCodeMgr.GetStockSectionKind(code)
+            name = objCpCodeMgr.CodeToName(code)
+            stdPrice = objCpCodeMgr.GetStockStdPrice(code)
+            strr += str(name) + ' ' + str(secondCode) + ' ' + str(stdPrice) + '\n'
+        print(i, code, secondCode, stdPrice, name)
+
     def get_stock_data(self, code, day):
         chart_data = win32com.client.Dispatch("CpSysDib.StockChart")
  
@@ -66,14 +74,14 @@ class stock:
 
         return stock_data
 
-    def check_all_stocks(self):
-        objCpCodeMgr = win32com.client.Dispatch("CpUtil.CpCodeMgr")
-        codeList = objCpCodeMgr.GetStockListByMarket(1) #거래소, 코스피
-        strr = ''
-        for i, code in enumerate(codeList):
-            secondCode = objCpCodeMgr.GetStockSectionKind(code)
-            name = objCpCodeMgr.CodeToName(code)
-            stdPrice = objCpCodeMgr.GetStockStdPrice(code)
-            strr += str(name) + ' ' + str(secondCode) + ' ' + str(stdPrice) + '\n'
-        print(i, code, secondCode, stdPrice, name)
-
+    def get_bollinger_bands(self, code):
+        stock_data = self.get_stock_data(code, 20)
+        data = stock_data['close']
+        avg = numpy.mean(data)
+        std = numpy.std(data)
+        
+        high_line = avg + (2 * std)
+        mid_line = avg
+        low_line = avg - (2 * std)
+        
+        return {'high' : high_line, 'mid' : mid_line, 'low' : low_line}
