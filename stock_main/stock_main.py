@@ -1,4 +1,5 @@
 import numpy, Connect, os, sys, win32com.client
+from pandas.core import series
 import pandas as pd
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from security.encryption_process import encryption_pro
@@ -13,7 +14,11 @@ class stock:
         self.fild_dict = {}
         self.stock_data = dict()
         self.stock_code = list()
+        self.kospi = dict()
+        self.kosdaq = dict()
         self.status = status
+        self.chart_data = win32com.client.Dispatch("CpSysDib.StockChart")
+
 
     def login(self):
         login_system = encryption_pro()
@@ -40,35 +45,34 @@ class stock:
             if codes not in self.stock_code:
                 self.stock_code.append(codes)    
 
-    def check_all_stocks(self):
+    def check_all_stocks_code(self):
         objCpCodeMgr = win32com.client.Dispatch("CpUtil.CpCodeMgr")
-        codeList = objCpCodeMgr.GetStockListByMarket(1) #거래소, 코스피
-        strr = ''
-        for i, code in enumerate(codeList):
-            secondCode = objCpCodeMgr.GetStockSectionKind(code)
+        kospi = objCpCodeMgr.GetStockListByMarket(1)
+        kosdaq = objCpCodeMgr.GetStockListByMarket(2)
+        for code in kospi:
             name = objCpCodeMgr.CodeToName(code)
-            stdPrice = objCpCodeMgr.GetStockStdPrice(code)
-            strr += str(name) + ' ' + str(secondCode) + ' ' + str(stdPrice) + '\n'
-        print(i, code, secondCode, stdPrice, name)
+            self.kospi.update({code : name})
+
+        for code in kosdaq:
+            name = objCpCodeMgr.CodeToName(code)
+            self.kosdaq.update({code : name})
 
     def get_stock_data(self, code, day):
-        chart_data = win32com.client.Dispatch("CpSysDib.StockChart")
- 
-        chart_data.SetInputValue(0, code)   
-        chart_data.SetInputValue(1, ord('2')) 
-        chart_data.SetInputValue(4, day)
-        chart_data.SetInputValue(5, [0,2,3,4,5, 8]) 
-        chart_data.SetInputValue(6, ord('D')) 
-        chart_data.SetInputValue(9, ord('1')) 
-        chart_data.BlockRequest()
+        self.chart_data.SetInputValue(0, code)   
+        self.chart_data.SetInputValue(1, ord('2')) 
+        self.chart_data.SetInputValue(4, day)
+        self.chart_data.SetInputValue(5, [0,2,3,4,5, 8]) 
+        self.chart_data.SetInputValue(6, ord('D')) 
+        self.chart_data.SetInputValue(9, ord('1')) 
+        self.chart_data.BlockRequest()
 
-        count = chart_data.GetHeaderValue(3)
+        count = self.chart_data.GetHeaderValue(3)
         columns = ['open', 'high', 'low', 'close']
         index = []
         rows = []
         for i in range(count): 
-            index.append(chart_data.GetDataValue(0, i)) 
-            rows.append([chart_data.GetDataValue(1, i), chart_data.GetDataValue(2, i), chart_data.GetDataValue(3, i), chart_data.GetDataValue(4, i)]) 
+            index.append(self.chart_data.GetDataValue(0, i)) 
+            rows.append([self.chart_data.GetDataValue(1, i), self.chart_data.GetDataValue(2, i), self.chart_data.GetDataValue(3, i), self.chart_data.GetDataValue(4, i)]) 
 
         stock_data = pd.DataFrame(rows, columns=columns, index=index)
 
