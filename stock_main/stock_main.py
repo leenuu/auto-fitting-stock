@@ -1,9 +1,9 @@
-import numpy, Connect, os, sys, win32com.client
+import numpy, Connect, os, sys, win32com.client, analysis_stock
 import pandas as pd
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from security.encryption_process import encryption_pro
 
-class stock:
+class stock(analysis_stock.analysis_stock, Connect.cybos_connect):
     def __init__(self, status):
         self.id, self.pwd, self.pwdcert = '', '', ''
         self.user_inform, self.stock_data, self.kospi, self.kosdaq = dict(), dict(), dict(), dict()
@@ -12,8 +12,7 @@ class stock:
         self.stock_code = list()
         self.status = status
         self.chart_data = win32com.client.Dispatch("CpSysDib.StockChart")
-
-
+        
     def login(self):
         login_system = encryption_pro()
         self.user_inform = login_system.get_key_file()
@@ -23,10 +22,9 @@ class stock:
             exit()
 
         print("Correct Key")
-        self.connection = Connect.cybos_connect()
-        self.connection.taskkill()
-        self.connection.connect(self.user_inform["id"], self.user_inform["pwd"], self.user_inform["pwdcert"], self.status) #true online 
-        self.connection.connect_test()
+        self.taskkill()
+        self.connect(self.user_inform["id"], self.user_inform["pwd"], self.user_inform["pwdcert"], self.status) #true online 
+        self.connect_test()
 
         # print("connect test complete")
     
@@ -73,15 +71,19 @@ class stock:
         return stock_data
 
     def get_bollinger_bands(self, code):
-        stock_data = self.get_stock_data(code, 400)
+        stock_data = self.get_stock_data(code, 30)
+        # print(stock_data)
         data = stock_data['close']
+        # print(data)
         high_line, low_line, mid_line, width, price = float(), float(), float(), float(), float()
         temp_data = dict()
         i = 0
+        
         while True:
+            # print(data.values[0:20])
             start = i
             end = start + 20
-            if end > 400:
+            if end > 30:
                 break
             avg = numpy.mean(data.values[start : end])
             std = numpy.std(data.values[start : end])
@@ -93,4 +95,24 @@ class stock:
             width = (high_line - low_line) / mid_line 
             temp_data[date] = {'high' : high_line, 'mid' : mid_line, 'low' : low_line, 'width' : width, 'price' : price}
             i += 1
-        return {code : temp_data}
+        # print(temp_data)
+        self.stock_data[code] = temp_data
+         
+    def buy(self, code, number):
+        print('buy : ' + code)
+
+    def sell(self, code, number):
+        print('sell : ' + code)
+
+    def judgment(self, code):
+        data = self.analysis_data(code, self.stock_data)
+        jg = self.judgment_B_S(data, [False, False])
+        num = 1
+        if jg == "buy":
+            self.buy(code, num)
+
+        elif jg == "sell":
+            self.sell(code, num)
+
+        elif jg == "stay":
+            print("stay : " + code)
