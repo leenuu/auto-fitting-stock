@@ -1,4 +1,10 @@
+import win32com.client
+
 class stock_buy_sell:        
+    def __init__(self):
+        self.stock_trade_client =  win32com.client.Dispatch("CpTrade.CpTdUtil")
+        self.Stock_Order_client = win32com.client.Dispatch("CpTrade.CpTd0311")
+
     def buy(self, code, number, location):
         initCheck = self.stock_trade_client.TradeInit(0)
         if (initCheck != 0):

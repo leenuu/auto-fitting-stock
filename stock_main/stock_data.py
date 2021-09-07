@@ -1,6 +1,12 @@
 import win32com.client, numpy, json
 import pandas as pd
 class get_stock_data:
+    def __init__(self):
+        self.chart_data_client = win32com.client.Dispatch("CpSysDib.StockChart")
+        self.stock_mst_client = win32com.client.Dispatch('DsCbo1.StockMst')
+        self.user_inform_client = win32com.client.Dispatch("CpTrade.CpTd6033")
+
+        
     def check_all_stocks_code(self):
         objCpCodeMgr = win32com.client.Dispatch("CpUtil.CpCodeMgr")
         kospi = objCpCodeMgr.GetStockListByMarket(1)

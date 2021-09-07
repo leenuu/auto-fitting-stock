@@ -1,35 +1,36 @@
-import Connect, analysis_stock, stock_buy_sell, stock_data, win32com.client
-import pandas as pd
+from Connect import cybos_connect
+from analysis_stock import analysis_stock
+from stock_buy_sell import stock_buy_sell
+from stock_data import get_stock_data
 import time
 
-class stock(analysis_stock.analysis_stock, Connect.cybos_connect, stock_buy_sell.stock_buy_sell, stock_data.get_stock_data):
+class stock:
     def __init__(self, status):
-        self.chart_data_client = win32com.client.Dispatch("CpSysDib.StockChart")
-        self.stock_mst_client = win32com.client.Dispatch('DsCbo1.StockMst')
-        self.user_inform_client = win32com.client.Dispatch("CpTrade.CpTd6033")
-        self.stock_trade_client =  win32com.client.Dispatch("CpTrade.CpTdUtil")
-        self.Stock_Order_client = win32com.client.Dispatch("CpTrade.CpTd0311")
+        self.connection = cybos_connect()
+        self.analysis = analysis_stock()
+        self.B_S = stock_buy_sell()
+        self.S_data = get_stock_data()
         self.stock_data, self.kospi, self.kosdaqm ,self.user_inform_data = dict(), dict(), dict(), dict()
         self.id, self.pwd, self.pwdcert, self.log_data = '', '', '', ''
         self.stock_code = list()
         self.status = status
         try:
-            self.user_inform_data['my stock'] = self.load_user_stock_data()
+            self.user_inform_data['my stock'] = self.S_data.load_user_stock_data()
         except FileNotFoundError:
-            self.user_inform_data['my stock'] = self.my_sotck_inform()
+            self.user_inform_data['my stock'] = self.S_data.my_sotck_inform()
 
     def judgment(self, code):
-        data = self.analysis_data(code, self.stock_data)
+        data = self.analysis.analysis_data(code, self.stock_data)
         user_data = self.user_inform_data['stock']
-        jg = self.judgment_B_S(data,user_data)
-        num = 1
+        jg = self.analysis.judgment_B_S(data,user_data)
+        num = self.user_inform_data['stock'][code]['amount']
         if jg[0] == "buy":
-            st = self.buy(code, num, jg[1])
+            st = self.B_S.buy(code, num, jg[1])
             if st == 0:
                 self.user_inform_data['stock'][code] = {'amount': num, 'buy location' : jg[1]}
 
         elif jg[0] == "sell":
-            st = self.sell(code, num)
+            st = self.B_S.sell(code, num)
             if st == 0:
                 del self.user_inform_data['stock'][code]
 
@@ -45,15 +46,15 @@ class stock(analysis_stock.analysis_stock, Connect.cybos_connect, stock_buy_sell
             for code in test.codes:
                 i += 1
                 time.sleep(0.251)
-                error = test.get_bollinger_bands(code)
+                error = self.S_data.get_bollinger_bands(code)
                 if error == 1:
                     st = len(test.codes)
                     continue
-                test.judgment(code)
+                self.judgment(code)
                 print(f"\r{i}/{st}          " ,end='')
             print('end')
-            test.save_log()
-            test.save_user_stock_data(test.user_inform_data['my stock'])
+            self.B_S.save_log()
+            self.S_data.save_user_stock_data(test.user_inform_data['my stock'])
             time.sleep(10)
 
 
