@@ -1,9 +1,25 @@
 from pywinauto import application
-import win32com.client
-import time
-import os
+import win32com.client, time, os, sys
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+from security.encryption_process import encryption_pro
 
 class cybos_connect:
+    def login(self):
+        status = False
+        login_system = encryption_pro()
+        user_inform = login_system.get_key_file()
+        
+        if user_inform == 0:
+            print("Invalid Key")
+            exit()
+
+        print("Correct Key")
+        self.taskkill()
+        self.connect(user_inform["id"], user_inform["pwd"], user_inform["pwdcert"], status) #true online 
+        self.connect_test()
+
+        return user_inform
+
     def taskkill(self):
         os.system('taskkill /IM ncStarter* /F /T')
         os.system('taskkill /IM CpStart* /F /T') 
@@ -24,9 +40,9 @@ class cybos_connect:
         self.timer()
     
     def connect_test(self):
-        objCpCybos = win32com.client.Dispatch("CpUtil.CpCybos")
-        bConnect = objCpCybos.IsConnect
-        if (bConnect == 0):
+        CpCybos = win32com.client.Dispatch("CpUtil.CpCybos")
+        Connect = CpCybos.IsConnect
+        if (Connect == 0):
             print("PLUS Connect Failed")
             exit()
         else:
@@ -34,5 +50,5 @@ class cybos_connect:
     
     def timer(self):
         for i in range(60):
-            print(f"\r{60 - i} ")
+            print(f"\r{60 - i} ", end='')
             time.sleep(1)

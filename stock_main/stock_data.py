@@ -1,0 +1,129 @@
+import win32com.client, numpy, json
+import pandas as pd
+class get_stock_data:
+    def check_all_stocks_code(self):
+        objCpCodeMgr = win32com.client.Dispatch("CpUtil.CpCodeMgr")
+        kospi = objCpCodeMgr.GetStockListByMarket(1)
+        kosdaq = objCpCodeMgr.GetStockListByMarket(2)
+        self.codes = []
+        for code in kospi:
+            name = objCpCodeMgr.CodeToName(code)
+            self.kospi.update({code : name})
+            
+            self.codes.append(code)
+            # print(code)
+        print(len(self.codes))
+        # self.codes = self.codes[:]
+        # for code in kosdaq:
+        #     name = objCpCodeMgr.CodeToName(code)
+        #     self.kosdaq.update({code : name})
+
+    def get_stock_data(self, code, day):
+        self.chart_data_client.SetInputValue(0, code)   
+        self.chart_data_client.SetInputValue(1, ord('2')) 
+        self.chart_data_client.SetInputValue(4, day)
+        self.chart_data_client.SetInputValue(5, [0,2,3,4,5, 8]) 
+        self.chart_data_client.SetInputValue(6, ord('D')) 
+        self.chart_data_client.SetInputValue(9, ord('1')) 
+        self.chart_data_client.BlockRequest()
+
+        count = self.chart_data_client.GetHeaderValue(3)
+        columns = ['open', 'high', 'low', 'close']
+        index = []
+        rows = []
+        for i in range(count): 
+            index.append(self.chart_data_client.GetDataValue(0, i)) 
+            rows.append([self.chart_data_client.GetDataValue(1, i), self.chart_data_client.GetDataValue(2, i), self.chart_data_client.GetDataValue(3, i), self.chart_data_client.GetDataValue(4, i)]) 
+
+        stock_data = pd.DataFrame(rows, columns=columns, index=index)
+
+        return stock_data
+
+    def get_bollinger_bands(self, code):
+        stock_data = self.get_stock_data(code, 30)
+        # print(stock_data)
+        data = stock_data['close']
+        # print(data)
+        high_line, low_line, mid_line, width, price = float(), float(), float(), float(), float()
+        temp_data = dict()
+        i = 0
+        
+        while True:
+            # print(data.values[0:20])
+            start = i
+            end = start + 20
+            if end > 30:
+                break
+            try: 
+                avg = numpy.mean(data.values[start : end])
+                std = numpy.std(data.values[start : end])
+                date = data.index[i]
+                price = data.values[start]
+                high_line = avg + (2 * std)
+                mid_line = avg
+                low_line = avg - (2 * std)
+                width = (high_line - low_line) / mid_line 
+                temp_data[date] = {'high' : high_line, 'mid' : mid_line, 'low' : low_line, 'width' : width, 'price' : price}
+                i += 1
+            
+            except IndexError:
+                self.codes.remove(code)
+                return 1
+
+        # print(temp_data)
+        self.stock_data[code] = temp_data
+
+    def get_sell_price(self, code):
+        self.stock_mst_client.SetInputValue(0, code)  
+        self.stock_mst_client.BlockRequest() 
+        return self.stock_mst_client.GetHeaderValue(16)
+    
+    def get_buy_price(self, code):
+        self.stock_mst_client.SetInputValue(0, code)   
+        self.stock_mst_client.BlockRequest()
+        return self.stock_mst_client.GetHeaderValue(17)
+
+    def my_sotck_inform(self):
+        user_stock_inform = dict()
+        initCheck = self.stock_trade_client.TradeInit(0)
+        if (initCheck != 0):
+            print("주문 초기화 실패")
+            exit()
+        
+        acc = self.stock_trade_client.AccountNumber[0]
+        accFlag = self.stock_trade_client.GoodsList(acc, 1)
+        
+        self.user_inform_client.SetInputValue(0, acc)
+        self.user_inform_client.SetInputValue(1, accFlag[0])
+        self.user_inform_client.SetInputValue(2, 50)
+
+        self.user_inform_client.BlockRequest()
+ 
+        cnt = self.user_inform_client.GetHeaderValue(7)
+        print(cnt)
+ 
+        for i in range(cnt):
+            code = self.user_inform_client.GetDataValue(12, i)  # 종목코드
+            name = self.user_inform_client.GetDataValue(0, i)  # 종목명
+            cashFlag = self.user_inform_client.GetDataValue(1, i)  # 신용구분
+            date = self.user_inform_client.GetDataValue(2, i)  # 대출일
+            amount = self.user_inform_client.GetDataValue(7, i) # 체결잔고수량
+            buyPrice = self.user_inform_client.GetDataValue(17, i) # 체결장부단가
+            evalValue = self.user_inform_client.GetDataValue(9, i) # 평가금액(천원미만은 절사 됨)
+            evalPerc = self.user_inform_client.GetDataValue(11, i) # 평가손익
+
+            user_stock_inform[code] = {'amount': amount, 'buy location' : ''}
+            # print(code, name, amount)
+        return user_stock_inform
+
+    def save_user_stock_data(self, data):
+        with open('user_data.json', 'w', encoding="utf-8") as json_file:
+            json.dump(data, json_file, sort_keys=True, indent=4, ensure_ascii=False)
+        
+    def load_user_stock_data(self):
+        with open('user_data.json', 'r') as json_file:
+            user_stock_data = json.load(json_file)
+
+        return user_stock_data
+
+    

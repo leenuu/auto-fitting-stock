@@ -33,44 +33,33 @@ class analysis_stock:
         
         return {'high' : high_line, 'mid' : mid_line, 'low' : low_line, "first" : first_price, "last" : last_price, "max" : max_price, "min" : min_price, "max index" : max_index, "min_index" : min_index, "yesterday price" : yesterday_p, "price" : price_list}
 
-    def judgment_B_S(self, data, status):
+    def judgment_B_S(self, data, my_stock, status):
         yesterday_p = data['yesterday price']
         now = data['last']
         mid = data['mid']
         high = data['high']
         low = data['low']
-        have_stock = status
-        sell_on = False
-        if datetime.now().hour >= 15:
-            sell_on = True
+        sell_on = status
+        bought_stock = list()
+        for code in list(my_stock.keys()):
+            bought_stock.append(code) 
 
-        # index = self.index_count(data)
+        if now > high and my_stock[code]['buy location'] == 'mid':
+            return ['sell']
 
-        if have_stock and sell_on:
-            if yesterday_p < high and now > high:
-                return 'sell'
+        elif now > mid and my_stock[code]['buy location'] == 'low':
+            return ['sell']
 
-            elif yesterday_p > mid and now < mid:
-                return 'sell'
-
-            elif low > now:
-                return 'sell'
-
-            else: 
-                return 'stay'
+        elif low > now:
+            return ['sell']
                 
-        elif have_stock == False and sell_on == False:
+        if code not in bought_stock and sell_on == False:
             if yesterday_p < mid and now > mid:
-                return 'buy'        
+                return ['buy','mid']       
+            elif yesterday_p < low and now > low:
+                return ['buy','low']   
             else: 
-                return 'stay'         
-
-        # elif yesterday_p > mid and now < mid:
-        #     return 'stay'
-
-        # elif yesterday_p == mid:
-        #     return 'stay'
-
+                return ['stay']         
         
     def index_count(self, data):
         if len(data['max index']) == 1:
@@ -91,3 +80,9 @@ class analysis_stock:
             MIN_index_count =  len(data['min index']) 
 
         return {'max index' : MAX_index, 'max index count' : MAX_index_count, 'min index' : MIN_index, 'min index count' : MIN_index_count}
+
+
+# First_MAX_lists = data['First'] - data['max']
+# First_MIN_lists = data['First'] - data['min']
+# Last_MAX_lists = data['last'] - data['max']
+# Last_MIN_lists = data['last'] - data['min']
