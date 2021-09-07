@@ -1,5 +1,6 @@
 import numpy, Connect, os, sys, win32com.client, analysis_stock
 import pandas as pd
+import time
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from security.encryption_process import encryption_pro
 
@@ -12,6 +13,10 @@ class stock(analysis_stock.analysis_stock, Connect.cybos_connect):
         self.stock_code = list()
         self.status = status
         self.chart_data = win32com.client.Dispatch("CpSysDib.StockChart")
+        self.stock_mst = win32com.client.Dispatch('DsCbo1.StockMst')
+        self.stock_trade =  win32com.client.Dispatch("CpTrade.CpTdUtil")
+        self.Stock_Order = win32com.client.Dispatch("CpTrade.CpTd0311")
+        self.log_data = ''
         
     def login(self):
         login_system = encryption_pro()
@@ -41,13 +46,22 @@ class stock(analysis_stock.analysis_stock, Connect.cybos_connect):
         objCpCodeMgr = win32com.client.Dispatch("CpUtil.CpCodeMgr")
         kospi = objCpCodeMgr.GetStockListByMarket(1)
         kosdaq = objCpCodeMgr.GetStockListByMarket(2)
+        self.codes = []
         for code in kospi:
             name = objCpCodeMgr.CodeToName(code)
             self.kospi.update({code : name})
-
-        for code in kosdaq:
-            name = objCpCodeMgr.CodeToName(code)
-            self.kosdaq.update({code : name})
+            
+            self.codes.append(code)
+            # print(code)
+        print(len(self.codes))
+        # self.codes = self.codes[:]
+        self.get = dict()
+        for code in self.codes:
+            self.get[code] = False
+        
+        # for code in kosdaq:
+        #     name = objCpCodeMgr.CodeToName(code)
+        #     self.kosdaq.update({code : name})
 
     def get_stock_data(self, code, day):
         self.chart_data.SetInputValue(0, code)   
@@ -85,34 +99,119 @@ class stock(analysis_stock.analysis_stock, Connect.cybos_connect):
             end = start + 20
             if end > 30:
                 break
-            avg = numpy.mean(data.values[start : end])
-            std = numpy.std(data.values[start : end])
-            date = data.index[i]
-            price = data.values[start]
-            high_line = avg + (2 * std)
-            mid_line = avg
-            low_line = avg - (2 * std)
-            width = (high_line - low_line) / mid_line 
-            temp_data[date] = {'high' : high_line, 'mid' : mid_line, 'low' : low_line, 'width' : width, 'price' : price}
-            i += 1
+            try: 
+                avg = numpy.mean(data.values[start : end])
+                std = numpy.std(data.values[start : end])
+                date = data.index[i]
+                price = data.values[start]
+                high_line = avg + (2 * std)
+                mid_line = avg
+                low_line = avg - (2 * std)
+                width = (high_line - low_line) / mid_line 
+                temp_data[date] = {'high' : high_line, 'mid' : mid_line, 'low' : low_line, 'width' : width, 'price' : price}
+                i += 1
+            
+            except IndexError:
+                self.codes.remove(code)
+                return 1
+
         # print(temp_data)
         self.stock_data[code] = temp_data
+
+    def get_sell_price(self, code):
+        self.stock_mst.SetInputValue(0, code)  
+        self.stock_mst.BlockRequest() 
+        return self.stock_mst.GetHeaderValue(16)
+    
+    def get_buy_price(self, code):
+        self.stock_mst.SetInputValue(0, code)   
+        self.stock_mst.BlockRequest()
+        return self.stock_mst.GetHeaderValue(17)
          
     def buy(self, code, number):
-        print('buy : ' + code)
+        initCheck = self.stock_trade.TradeInit(0)
+        if (initCheck != 0):
+            print("주문 초기화 실패")
+            exit()
+        
+        price = self.get_buy_price(code)
+
+        acc = self.stock_trade.AccountNumber[0]
+        accFlag = self.stock_trade.GoodsList(acc, 1)  
+        print(acc, accFlag[0])
+        
+        self.Stock_Order.SetInputValue(0, "2")   
+        self.Stock_Order.SetInputValue(1, acc )  
+        self.Stock_Order.SetInputValue(2, accFlag[0])   
+        self.Stock_Order.SetInputValue(3, code)  
+        self.Stock_Order.SetInputValue(4, number)  
+        self.Stock_Order.SetInputValue(5, price)   
+        self.Stock_Order.SetInputValue(7, "0")   
+        self.Stock_Order.SetInputValue(8, "01")  
+        
+        self.Stock_Order.BlockRequest()
+        
+        rqStatus = self.Stock_Order.GetDibStatus()
+        rqRet = self.Stock_Order.GetDibMsg1()
+        print("\n통신상태", rqStatus, rqRet)
+        if rqStatus == -1:
+            print('불가')
+        else:
+            print('buy : ' + code)
+            self.add_log(f'buy {code} : {number}')
 
     def sell(self, code, number):
-        print('sell : ' + code)
+        initCheck = self.stock_trade.TradeInit(0)
+        if (initCheck != 0):
+            print("주문 초기화 실패")
+            exit()
+        
+        price = self.get_sell_price(code)
+
+        # print(self.stock_trade.AccountNumber)
+        acc = self.stock_trade.AccountNumber[0]
+        accFlag = self.stock_trade.GoodsList(acc, 1)  
+        print(acc, accFlag[0])
+
+        self.Stock_Order.SetInputValue(0, "2")   
+        self.Stock_Order.SetInputValue(1, acc )  
+        self.Stock_Order.SetInputValue(2, accFlag[0])   
+        self.Stock_Order.SetInputValue(3, code)  
+        self.Stock_Order.SetInputValue(4, number)  
+        self.Stock_Order.SetInputValue(5, price)   
+        self.Stock_Order.SetInputValue(7, "0")   
+        self.Stock_Order.SetInputValue(8, "01")  
+        
+        self.Stock_Order.BlockRequest()
+        
+        rqStatus = self.Stock_Order.GetDibStatus()
+        rqRet = self.Stock_Order.GetDibMsg1()
+        print("\n통신상태", rqStatus, rqRet)
+        if rqStatus == -1:
+            print('불가')
+        else:
+            print('sell : ' + code)
+            self.add_log(f'sell {code} : {number}')
 
     def judgment(self, code):
         data = self.analysis_data(code, self.stock_data)
-        jg = self.judgment_B_S(data, [False, False])
+        jg = self.judgment_B_S(data, self.get[code])
         num = 1
         if jg == "buy":
             self.buy(code, num)
+            self.get[code] = True
 
         elif jg == "sell":
             self.sell(code, num)
 
         elif jg == "stay":
-            print("stay : " + code)
+            pass
+            # print("stay : " + code)
+
+    def add_log(self, st):
+        self.log_data += st + '\n'
+
+    def save_log(self):
+        f = open("log.txt",'w')
+        f.write(self.log_data)
+        f.close()
