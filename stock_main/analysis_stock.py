@@ -39,8 +39,10 @@ class analysis_stock:
         mid = data['mid']
         high = data['high']
         low = data['low']
-        have_stock = status[0]
-        sell_on = status[1]
+        have_stock = status
+        sell_on = False
+        if datetime.now().hour >= 15:
+            sell_on = True
 
         # index = self.index_count(data)
 
@@ -51,10 +53,13 @@ class analysis_stock:
             elif yesterday_p > mid and now < mid:
                 return 'sell'
 
+            elif low > now:
+                return 'sell'
+
             else: 
                 return 'stay'
                 
-        elif have_stock == False:
+        elif have_stock == False and sell_on == False:
             if yesterday_p < mid and now > mid:
                 return 'buy'        
             else: 
@@ -86,9 +91,3 @@ class analysis_stock:
             MIN_index_count =  len(data['min index']) 
 
         return {'max index' : MAX_index, 'max index count' : MAX_index_count, 'min index' : MIN_index, 'min index count' : MIN_index_count}
-
-
-# First_MAX_lists = data['First'] - data['max']
-# First_MIN_lists = data['First'] - data['min']
-# Last_MAX_lists = data['last'] - data['max']
-# Last_MIN_lists = data['last'] - data['min']
