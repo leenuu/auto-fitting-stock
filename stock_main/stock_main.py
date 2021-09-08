@@ -44,9 +44,10 @@ class stock:
                 time.sleep(0.251)
 
 
-code = 'A005930'
+# code = 'A005930'
 get = dict()
 test = stock(False)
+test.run()
 # test.load_data()
 # test.judgment(code)
 # test.load_data()
