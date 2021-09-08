@@ -104,16 +104,6 @@ class stock_data:
             # print(code, name, amount)
         return user_stock_inform
 
-    def save_user_stock_data(self, data):
-        with open('user_data.json', 'w', encoding="utf-8") as json_file:
-            json.dump(data, json_file, sort_keys=True, indent=4, ensure_ascii=False)
-        
-    def load_user_stock_data(self):
-        with open('user_data.json', 'r') as json_file:
-            user_stock_data = json.load(json_file)
-
-        return user_stock_data
-
     def get_Stochastic_Slow(self, code):
         chart_value = dict()
         self.set_data_Stochastic_Slow(code, 100, self.CpSeries_client)
@@ -121,7 +111,6 @@ class stock_data:
         self.stock_index_client.put_IndexKind("Stochastic Slow")  
         self.stock_index_client.put_IndexDefault("Stochastic Slow")  
 
-        print('지표 조건값 변경')
         self.stock_index_client.Term1 = 5
         self.stock_index_client.Term2 = 3
         self.stock_index_client.Signal = 3
@@ -158,7 +147,14 @@ class stock_data:
             vol = self.chart_data_client.GetDataValue(5, len - i - 1)
             CpSeries_client.Add(close, open, high, low, vol)
 
-
+    def save_user_stock_data(self, data):
+        with open('user_data.json', 'w', encoding="utf-8") as json_file:
+            json.dump(data, json_file, sort_keys=True, indent=4, ensure_ascii=False)
+        
+    def load_user_stock_data(self):
+        with open('user_data.json', 'r') as json_file:
+            user_stock_data = json.load(json_file)
+        return user_stock_data
 
 
 

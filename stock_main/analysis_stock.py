@@ -1,44 +1,60 @@
 import numpy
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from stock_buy_sell import stock_buy_sell
 
 class analysis_stock:
     def __init__(self):
         self.stock_buy_sell_module = stock_buy_sell()
 
-    def analysis_data(self, code, stock_data):
-        price_list = list()
-        date_list = list()
-        data = stock_data[code]
-        for date in data:
-            date_list.append(date)            
-        date_list.sort()
-        for date in date_list:
-            price = data[date]['price']
-            price_list.append(price)
-
-        first_price = price_list[0]
-        yesterday_p = price_list[9]
-        last_price = price_list[10]
-
-        today = int(datetime.today().strftime("%Y%m%d"))
-
-        high_line = stock_data[code][today]['high']
-        mid_line = stock_data[code][today]['mid']
-        low_line = stock_data[code][today]['low']
-
-        max_price = max(price_list)
-        min_price = min(price_list)
-        max_index = numpy.where(numpy.array(price_list) == max_price)[0]
-        min_index = numpy.where(numpy.array(price_list) == min_price)[0]
+    def analysis_data(self, bb, stc):
         
-        return {'high' : high_line, 'mid' : mid_line, 'low' : low_line, "first" : first_price, "last" : last_price, "max" : max_price, "min" : min_price, "max index" : max_index, "min_index" : min_index, "yesterday price" : yesterday_p, "price" : price_list}
+        today = int(date.today().strftime("%Y%m%d"))
+        yesterday = int((date.today() - timedelta(1)).strftime("%Y%m%d"))
 
-    def judgment_B_S(self, data, my_stock):
-        yesterday_p = data['yesterday price']
-        now = data['last']
-        mid = data['mid']
-        high = data['high']
-        low = data['low']
-        bought_stock = list()
-       
+        yesterday_p = bb[yesterday]['price']
+        now_p = bb[today]['price']
+
+        high_line = bb[today]['high']
+        mid_line = bb[today]['mid']
+        low_line = bb[today]['low']
+        yesterday_high_line = bb[yesterday]['high']
+        yesterday_mid_line = bb[yesterday]['mid']
+        yesterday_low_line = bb[yesterday]['low']
+        
+        now_stc = stc[len(stc)-1]
+        yesterday_stc = stc[len(stc)-2]
+        return {'yesterday stc' : yesterday_stc, 'now stc' : now_stc, 'high' : high_line, 'mid' : mid_line, 'low' : low_line, 'yesterday high' : yesterday_high_line, 'yesterday mid' : yesterday_mid_line, 'yesterday low' : yesterday_low_line, "yesterday price" : yesterday_p, "now price" : now_p}
+
+    def judgment_B_S(self, code, data, my_stock):
+        now_p, yesterday_p, now_stc, yesterday_stc = data['now price'], data['yesterday price'], data['yesterday stc'], data['now stc']
+        now_high, now_low, now_mid, yesterday_high, yesterday_low, yesterday_mid= data['high'], data['low'], data['mid'], data['yesterday high'], data['yesterday low'], data['yesterday mid']
+        bought_stock = list(my_stock.keys())
+        sell_time = 15
+        now = datetime.now().hour
+        number = 1
+
+        if now >= sell_time and code in bought_stock:
+            if yesterday_stc > 80 and now_stc < 80:
+                if yesterday_high > yesterday_p and now_p > now_high and my_stock[code]['buy location'] == 'mid':
+                    self.stock_buy_sell_module.sell(code, my_stock[code]['amount'])
+                
+                elif yesterday_mid > yesterday_p and now_p > now_mid and my_stock[code]['buy location'] == 'low':
+                    self.stock_buy_sell_module.sell(code, my_stock[code]['amount'])
+                
+                else:
+                    return ['stay']
+            else:
+                return ['stay']
+
+        else:
+            if yesterday_stc < 20 and now_stc > 20:
+                if yesterday_mid > yesterday_p and now_p > now_mid:
+                    self.stock_buy_sell_module.buy(code, number)
+                
+                elif yesterday_low > yesterday_p and now_p > now_low:
+                    self.stock_buy_sell_module.buy(code, number)
+                
+                else:
+                    return ['stay']
+            else:
+                return ['stay']

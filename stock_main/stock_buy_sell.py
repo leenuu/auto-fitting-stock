@@ -37,7 +37,6 @@ class stock_buy_sell:
         else:
             print('buy : ' + code, location)
             self.add_log(f'buy {code} : {number}, {location}')
-            return 0
 
     def sell(self, code, number):
         initCheck = self.stock_trade_client.TradeInit(0)
@@ -71,7 +70,6 @@ class stock_buy_sell:
         else:
             print('sell : ' + code)
             self.add_log(f'sell {code} : {number}')
-            return 0
 
     def get_sell_price(self, code):
         self.stock_mst_client.SetInputValue(0, code)  
