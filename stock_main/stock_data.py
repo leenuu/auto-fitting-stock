@@ -1,28 +1,26 @@
 import win32com.client, numpy, json
 import pandas as pd
-class get_stock_data:
+class stock_data:
     def __init__(self):
         self.chart_data_client = win32com.client.Dispatch("CpSysDib.StockChart")
         self.stock_mst_client = win32com.client.Dispatch('DsCbo1.StockMst')
         self.user_inform_client = win32com.client.Dispatch("CpTrade.CpTd6033")
-
+        self.stock_code_client = win32com.client.Dispatch("CpUtil.CpCodeMgr")
+        self.stock_trade_client =  win32com.client.Dispatch("CpTrade.CpTdUtil")
+        self.CpSeries_client = win32com.client.Dispatch("CpIndexes.CpSeries")
+        self.stock_index_client = win32com.client.Dispatch("CpIndexes.CpIndex")
         
     def check_all_stocks_code(self):
-        objCpCodeMgr = win32com.client.Dispatch("CpUtil.CpCodeMgr")
-        kospi = objCpCodeMgr.GetStockListByMarket(1)
-        kosdaq = objCpCodeMgr.GetStockListByMarket(2)
-        self.codes = []
+        kospi = self.stock_code_client.GetStockListByMarket(1)
+        kosdaq = self.stock_code_client.GetStockListByMarket(2)
+        kospi_codes, kosdaq_codes = list(), list()
+        kospi_name, kosdaq_name = dict(), dict()
         for code in kospi:
-            name = objCpCodeMgr.CodeToName(code)
-            self.kospi.update({code : name})
-            
-            self.codes.append(code)
-            # print(code)
-        print(len(self.codes))
-        # self.codes = self.codes[:]
-        # for code in kosdaq:
-        #     name = objCpCodeMgr.CodeToName(code)
-        #     self.kosdaq.update({code : name})
+            name = self.stock_code_client.CodeToName(code)
+            kospi_name.update({code : name})
+            kospi_codes.append(code)
+
+        return {'kospi codes' : kospi_codes, 'kospi name' : kospi_name} 
 
     def get_stock_data(self, code, day):
         self.chart_data_client.SetInputValue(0, code)   
@@ -47,15 +45,12 @@ class get_stock_data:
 
     def get_bollinger_bands(self, code):
         stock_data = self.get_stock_data(code, 30)
-        # print(stock_data)
         data = stock_data['close']
-        # print(data)
         high_line, low_line, mid_line, width, price = float(), float(), float(), float(), float()
         temp_data = dict()
         i = 0
         
         while True:
-            # print(data.values[0:20])
             start = i
             end = start + 20
             if end > 30:
@@ -73,27 +68,15 @@ class get_stock_data:
                 i += 1
             
             except IndexError:
-                self.codes.remove(code)
-                return 1
+                return code
 
-        # print(temp_data)
-        self.stock_data[code] = temp_data
-
-    def get_sell_price(self, code):
-        self.stock_mst_client.SetInputValue(0, code)  
-        self.stock_mst_client.BlockRequest() 
-        return self.stock_mst_client.GetHeaderValue(16)
-    
-    def get_buy_price(self, code):
-        self.stock_mst_client.SetInputValue(0, code)   
-        self.stock_mst_client.BlockRequest()
-        return self.stock_mst_client.GetHeaderValue(17)
+        return temp_data
 
     def my_sotck_inform(self):
         user_stock_inform = dict()
         initCheck = self.stock_trade_client.TradeInit(0)
         if (initCheck != 0):
-            print("주문 초기화 실패")
+            print("reset fail")
             exit()
         
         acc = self.stock_trade_client.AccountNumber[0]
@@ -106,7 +89,6 @@ class get_stock_data:
         self.user_inform_client.BlockRequest()
  
         cnt = self.user_inform_client.GetHeaderValue(7)
-        print(cnt)
  
         for i in range(cnt):
             code = self.user_inform_client.GetDataValue(12, i)  # 종목코드
@@ -132,4 +114,54 @@ class get_stock_data:
 
         return user_stock_data
 
-    
+    def get_Stochastic_Slow(self, code):
+        chart_value = dict()
+        self.set_data_Stochastic_Slow(code, 100, self.CpSeries_client)
+        self.stock_index_client.series = self.CpSeries_client
+        self.stock_index_client.put_IndexKind("Stochastic Slow")  
+        self.stock_index_client.put_IndexDefault("Stochastic Slow")  
+
+        print('지표 조건값 변경')
+        self.stock_index_client.Term1 = 5
+        self.stock_index_client.Term2 = 3
+        self.stock_index_client.Signal = 3
+        self.stock_index_client.Calculate()
+
+        cntofIndex = self.stock_index_client.ItemCount
+        indexName = ["SLOW K", "SLOW D"]
+        for index in range(cntofIndex):
+            name = indexName[index]
+            chart_value[name] = []
+            cnt = self.stock_index_client.GetCount(index)
+            for j in range(cnt) :
+                value = self.stock_index_client.GetResult(index,j)
+                chart_value[name].append(value)
+        
+        return chart_value
+
+    def set_data_Stochastic_Slow(self, code, cnt, CpSeries_client):
+        self.chart_data_client.SetInputValue(0, code)
+        self.chart_data_client.SetInputValue(1, ord('2'))
+        self.chart_data_client.SetInputValue(4, cnt) 
+        self.chart_data_client.SetInputValue(5, [0, 2, 3, 4, 5, 8])  
+        self.chart_data_client.SetInputValue(6, ord('D'))  
+        self.chart_data_client.SetInputValue(9, ord('1'))  
+        self.chart_data_client.BlockRequest()
+        len = self.chart_data_client.GetHeaderValue(3)
+
+        for i in range(len):
+            day = self.chart_data_client.GetDataValue(0, len - i - 1)
+            open = self.chart_data_client.GetDataValue(1, len - i - 1)
+            high = self.chart_data_client.GetDataValue(2, len - i - 1)
+            low = self.chart_data_client.GetDataValue(3, len - i - 1)
+            close = self.chart_data_client.GetDataValue(4, len - i - 1)
+            vol = self.chart_data_client.GetDataValue(5, len - i - 1)
+            CpSeries_client.Add(close, open, high, low, vol)
+
+
+
+
+
+
+
+ 

@@ -4,18 +4,19 @@ class stock_buy_sell:
     def __init__(self):
         self.stock_trade_client =  win32com.client.Dispatch("CpTrade.CpTdUtil")
         self.Stock_Order_client = win32com.client.Dispatch("CpTrade.CpTd0311")
+        self.stock_mst_client = win32com.client.Dispatch('DsCbo1.StockMst')
 
     def buy(self, code, number, location):
         initCheck = self.stock_trade_client.TradeInit(0)
         if (initCheck != 0):
-            print("주문 초기화 실패")
+            print("reset fail")
             exit()
         
         price = self.get_buy_price(code)
 
         acc = self.stock_trade_client.AccountNumber[0]
         accFlag = self.stock_trade_client.GoodsList(acc, 1)  
-        print(acc, accFlag[0])
+        # print(acc, accFlag[0])
         
         self.Stock_Order_client.SetInputValue(0, "2")   
         self.Stock_Order_client.SetInputValue(1, acc )  
@@ -30,9 +31,9 @@ class stock_buy_sell:
         
         rqStatus = self.Stock_Order_client.GetDibStatus()
         rqRet = self.Stock_Order_client.GetDibMsg1()
-        print("\n통신상태", rqStatus, rqRet)
+        print("\nstatus : ", rqStatus, rqRet)
         if rqStatus == -1:
-            print('불가')
+            print('fail')
         else:
             print('buy : ' + code, location)
             self.add_log(f'buy {code} : {number}, {location}')
@@ -41,7 +42,7 @@ class stock_buy_sell:
     def sell(self, code, number):
         initCheck = self.stock_trade_client.TradeInit(0)
         if (initCheck != 0):
-            print("주문 초기화 실패")
+            print("reset fail")
             exit()
         
         price = self.get_sell_price(code)
@@ -64,14 +65,24 @@ class stock_buy_sell:
         
         rqStatus = self.Stock_Order_client.GetDibStatus()
         rqRet = self.Stock_Order_client.GetDibMsg1()
-        print("\n통신상태", rqStatus, rqRet)
+        print("\nstatus : ", rqStatus, rqRet)
         if rqStatus == -1:
-            print('불가')
+            print('fail')
         else:
             print('sell : ' + code)
             self.add_log(f'sell {code} : {number}')
             return 0
-        
+
+    def get_sell_price(self, code):
+        self.stock_mst_client.SetInputValue(0, code)  
+        self.stock_mst_client.BlockRequest() 
+        return self.stock_mst_client.GetHeaderValue(16)
+    
+    def get_buy_price(self, code):
+        self.stock_mst_client.SetInputValue(0, code)   
+        self.stock_mst_client.BlockRequest()
+        return self.stock_mst_client.GetHeaderValue(17)
+
     def add_log(self, st):
         self.log_data += st + '\n'
 
