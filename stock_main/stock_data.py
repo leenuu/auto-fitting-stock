@@ -17,6 +17,9 @@ class stock_data:
         kospi_name, kosdaq_name = dict(), dict()
         for code in kospi:
             name = self.stock_code_client.CodeToName(code)
+            # print(name)
+            # if '바이오' in name:
+                # print(name)
             kospi_name.update({code : name})
             kospi_codes.append(code)
 

@@ -26,7 +26,7 @@ class analysis_stock:
         return {'yesterday stc' : yesterday_stc, 'now stc' : now_stc, 'high' : high_line, 'mid' : mid_line, 'low' : low_line, 'yesterday high' : yesterday_high_line, 'yesterday mid' : yesterday_mid_line, 'yesterday low' : yesterday_low_line, "yesterday price" : yesterday_p, "now price" : now_p}
 
     def judgment_B_S(self, code, data, my_stock):
-        now_p, yesterday_p, now_stc, yesterday_stc = data['now price'], data['yesterday price'], data['yesterday stc'], data['now stc']
+        now_p, yesterday_p, now_stc, yesterday_stc = data['now price'], data['yesterday price'], data['now stc'], data['yesterday stc']
         now_high, now_low, now_mid, yesterday_high, yesterday_low, yesterday_mid= data['high'], data['low'], data['mid'], data['yesterday high'], data['yesterday low'], data['yesterday mid']
         bought_stock = list(my_stock.keys())
         sell_time = 15
@@ -36,11 +36,19 @@ class analysis_stock:
         if now >= sell_time and code in bought_stock:
             if yesterday_stc > 80 and now_stc < 80:
                 if yesterday_high > yesterday_p and now_p > now_high and my_stock[code]['buy location'] == 'mid':
-                    self.stock_buy_sell_module.sell(code, my_stock[code]['amount'])
-                
+                    status = self.stock_buy_sell_module.sell(code, my_stock[code]['amount'])
+                    if status == 0:
+                        return ['success']
+                    else:
+                        return ['fail']
+
                 elif yesterday_mid > yesterday_p and now_p > now_mid and my_stock[code]['buy location'] == 'low':
-                    self.stock_buy_sell_module.sell(code, my_stock[code]['amount'])
-                
+                    status = self.stock_buy_sell_module.sell(code, my_stock[code]['amount'])
+                    if status == 0:
+                        return ['sell success']
+                    else:
+                        return ['fail']
+                        
                 else:
                     return ['stay']
             else:
@@ -49,11 +57,23 @@ class analysis_stock:
         else:
             if yesterday_stc < 20 and now_stc > 20:
                 if yesterday_mid > yesterday_p and now_p > now_mid:
-                    self.stock_buy_sell_module.buy(code, number)
+                    status = self.stock_buy_sell_module.buy(code, number, 'mid')
+                    if status == 0:
+                        print(yesterday_stc, now_stc)
+                        return ['buy success', number, 'mid']
+                    else:
+                        return ['fail']
+                        
                 
                 elif yesterday_low > yesterday_p and now_p > now_low:
-                    self.stock_buy_sell_module.buy(code, number)
-                
+                    status = self.stock_buy_sell_module.buy(code, number, 'low')
+                    if status == 0:
+                        print(yesterday_stc, now_stc)
+                        return ['buy success', number, 'low']
+                    else:
+                        return ['fail']
+                   
+
                 else:
                     return ['stay']
             else:
