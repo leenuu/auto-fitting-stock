@@ -109,7 +109,7 @@ class stock_data:
 
     def get_Stochastic_Slow(self, code):
         chart_value = dict()
-        self.set_data_Stochastic_Slow(code, 100, self.CpSeries_client)
+        self.set_data_Stochastic_Slow(code, 21, self.CpSeries_client)
         self.stock_index_client.series = self.CpSeries_client
         self.stock_index_client.put_IndexKind("Stochastic Slow")  
         self.stock_index_client.put_IndexDefault("Stochastic Slow")  

@@ -9,7 +9,10 @@ class analysis_stock:
     def analysis_data(self, bb, stc):
         
         today = int(date.today().strftime("%Y%m%d"))
-        yesterday = int((date.today() - timedelta(1)).strftime("%Y%m%d"))
+        if datetime.today().weekday() == 0:
+            yesterday = int((date.today() - timedelta(3)).strftime("%Y%m%d"))
+        else:
+            yesterday = int((date.today() - timedelta(1)).strftime("%Y%m%d"))
 
         yesterday_p = bb[yesterday]['price']
         now_p = bb[today]['price']
@@ -29,11 +32,17 @@ class analysis_stock:
         now_p, yesterday_p, now_stc, yesterday_stc = data['now price'], data['yesterday price'], data['now stc'], data['yesterday stc']
         now_high, now_low, now_mid, yesterday_high, yesterday_low, yesterday_mid= data['high'], data['low'], data['mid'], data['yesterday high'], data['yesterday low'], data['yesterday mid']
         bought_stock = list(my_stock.keys())
+        # print(bought_stock)
         sell_time = 15
         now = datetime.now().hour
         number = 1
+        sell_on = False
+        buy_on = True
+        if now >= sell_time :
+            sell_on = True
+            buy_on = False
 
-        if now >= sell_time and code in bought_stock:
+        if sell_on and code in bought_stock:
             if yesterday_stc > 80 and now_stc < 80:
                 if yesterday_high > yesterday_p and now_p > now_high and my_stock[code]['buy location'] == 'mid':
                     status = self.stock_buy_sell_module.sell(code, my_stock[code]['amount'])
@@ -54,7 +63,7 @@ class analysis_stock:
             else:
                 return ['stay']
 
-        else:
+        elif buy_on and code not in bought_stock:
             if yesterday_stc < 20 and now_stc > 20:
                 if yesterday_mid > yesterday_p and now_p > now_mid:
                     status = self.stock_buy_sell_module.buy(code, number, 'mid')
@@ -78,3 +87,5 @@ class analysis_stock:
                     return ['stay']
             else:
                 return ['stay']
+        else:
+            return ['stay']
