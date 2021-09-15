@@ -1,4 +1,3 @@
-import numpy
 from datetime import datetime, date, timedelta
 from stock_buy_sell import stock_buy_sell
 
@@ -36,23 +35,27 @@ class analysis_stock:
         
         number = 1
         if sell_on and code in bought_stock:
-            if yesterday_stc > 80 and now_stc < 80:
-                if yesterday_high > yesterday_p and now_p > now_high and my_stock[code]['buy location'] == 'mid':
-                    status = self.stock_buy_sell_module.sell(code, my_stock[code]['amount'])
-                    if status == 0:
-                        return ['success']
-                    else:
-                        return ['fail']
-
-                elif yesterday_mid > yesterday_p and now_p > now_mid and my_stock[code]['buy location'] == 'low':
-                    status = self.stock_buy_sell_module.sell(code, my_stock[code]['amount'])
-                    if status == 0:
-                        return ['sell success']
-                    else:
-                        return ['fail']
-                        
+            if yesterday_high > yesterday_p and now_p > now_high and my_stock[code]['buy location'] == 'mid':
+                status = self.stock_buy_sell_module.sell(code, my_stock[code]['amount'])
+                if status == 0:
+                    return ['success']
                 else:
-                    return ['stay']
+                    return ['fail']
+
+            elif yesterday_mid > yesterday_p and now_p > now_mid and my_stock[code]['buy location'] == 'low':
+                status = self.stock_buy_sell_module.sell(code, my_stock[code]['amount'])
+                if status == 0:
+                    return ['sell success']
+                else:
+                    return ['fail']
+            
+            elif yesterday_low < yesterday_p and now_low > now_p:
+                status = self.stock_buy_sell_module.sell(code, my_stock[code]['amount'])
+                if status == 0:
+                    return ['sell success']
+                else:
+                    return ['fail']
+                    
             else:
                 return ['stay']
 

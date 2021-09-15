@@ -49,6 +49,6 @@ class cybos_connect:
             print("PLUS Connect Complete")
     
     def timer(self):
-        for i in range(60):
-            print(f"\r{60 - i} ", end='')
+        for i in range(90):
+            print(f"\r{90 - i} ", end='')
             time.sleep(1)

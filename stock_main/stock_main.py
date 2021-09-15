@@ -48,16 +48,11 @@ class stock:
             return None
 
     def run(self):
-        self.cybos_connect_module.login() 
+        # self.cybos_connect_module.login() 
         self.load_data()
         st = len(self.stock_code)
-        i = 0
+        i , times = 0, 0
         while True:
-            now = datetime.now().hour
-            sell_time = 15
-            if now >= sell_time :
-                self.stock_data = list(self.user_inform_data['my stock'].keys())
-
             if datetime.now().hour < 9:
                 print('not time')
                 time.sleep(60)
@@ -70,6 +65,18 @@ class stock:
             
             print('start')
             for code in self.stock_code:
+                now = datetime.now().hour
+                sell_time = 15
+                if now >= sell_time and times ==0 :
+                    self.stock_code = list(self.user_inform_data['my stock'].keys())
+                    # print(self.stock_code)
+                    st = len(self.stock_code)
+                    times = 1
+                    break
+                    
+                # print(1)
+                # if now >= sell_time :
+                #     break
                 status = self.judgment(code)
                 # print(status)
                 if status == None:
@@ -79,11 +86,11 @@ class stock:
                 elif status[0] == 'sell success':
                     del self.user_inform_data['my stock'][code]
                 i += 1
-                print(f'\r {i}/{st}       ', end='')
+                print(f'\r{i}/{st}       ', end='')
                 time.sleep(0.251)
 
             i = 0
-            print('end')
+            print('\nend')
             self.save_data()
 code = 'A005930'
 get = dict()
@@ -92,6 +99,8 @@ test = stock(False)
 # test.user_inform_data['my stock'] = test.stock_data_module.my_sotck_inform()
 # test.save_data()
 test.run()
+# test.load_data()
+# print(test.user_inform_data['my stock'].keys())
 # print(test.stock_data_module.get_Stochastic_Slow(code)["SLOW K"])
 
 # a = test.stock_data_module.get_Stochastic_Slow('A014915')['SLOW K']
