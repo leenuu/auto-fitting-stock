@@ -49,21 +49,26 @@ class stock:
 
     def run(self):
         # self.cybos_connect_module.login() 
+        print('start load data')
         self.load_data()
+        print('load data complete')
         st = len(self.stock_code)
         i , times = 0, 0
+        print('check time')
         while True:
             if datetime.now().hour < 9:
-                print('not time')
-                time.sleep(60)
+                print('\rnot time     ', end='')
+                time.sleep(59)
+                print('\rcheck time   ', end='')
+                time.sleep(1)
                 continue
-
+            
             if type(self.stock_code) != list:
                 print('err')
                 self.stock_code.remove(code)
                 continue
             
-            print('start')
+            print('\nstart')
             for code in self.stock_code:
                 now = datetime.now().hour
                 sell_time = 15
