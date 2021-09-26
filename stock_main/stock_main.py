@@ -27,14 +27,12 @@ class stock:
         self.analysis_stock_module.stock_buy_sell_module.save_log()
         self.stock_data_module.save_user_stock_data(data)
 
-    def judgment(self, code):
+    def judgment(self, code, times):
         try:
 
             sell_on = False
             buy_on = True
-            now = datetime.now().hour
-            sell_time = 15
-            if now >= sell_time :
+            if times == 1:
                 sell_on = True
                 buy_on = False
             stc = self.stock_data_module.get_Stochastic_Slow(code)['SLOW K']
@@ -70,9 +68,11 @@ class stock:
             
             print('\nstart')
             for code in self.stock_code:
-                now = datetime.now().hour
-                sell_time = 15
-                if now >= sell_time and times ==0 :
+                now_h = datetime.now().hour
+                now_m = datetime.now().minute
+                sell_time_h = 14
+                sell_time_m = 30
+                if now_m >= sell_time_m and now_h >= sell_time_h and times == 0 :
                     self.stock_code = list(self.user_inform_data['my stock'].keys())
                     # print(self.stock_code)
                     st = len(self.stock_code)
@@ -82,7 +82,7 @@ class stock:
                 # print(1)
                 # if now >= sell_time :
                 #     break
-                status = self.judgment(code)
+                status = self.judgment(code, times)
                 # print(status)
                 if status == None:
                     pass
@@ -99,7 +99,7 @@ class stock:
             self.save_data()
 # code = 'A005930'
 # get = dict()
-test = stock()
+# test = stock()
 # test.cybos_connect_module.login()
 # test.user_inform_data['my stock'] = test.stock_data_module.my_sotck_inform()
 # test.save_data()
