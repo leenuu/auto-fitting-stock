@@ -1,18 +1,18 @@
-from Connect import cybos_connect
-from analysis_stock import analysis_stock
-from stock_data import stock_data
+from stock_main.analysis_stock import analysis_stock
+from stock_main.stock_data import stock_data
+from stock_main.Connect import cybos_connect
 import time
 from datetime import datetime
 
 class stock:
-    def __init__(self, status):
+    def __init__(self):
         self.cybos_connect_module = cybos_connect()
         self.analysis_stock_module = analysis_stock()
         self.stock_data_module = stock_data()
         self.stock_data, self.kospi, self.kosdaqm ,self.user_inform_data = dict(), dict(), dict(), dict()
         self.id, self.pwd, self.pwdcert = '', '', ''
         self.stock_code = list()
-        self.status = status
+        # self.status = status
 
     def load_data(self):
         try:
@@ -48,7 +48,7 @@ class stock:
             return None
 
     def run(self):
-        # self.cybos_connect_module.login() 
+        self.cybos_connect_module.login() 
         print('start load data')
         self.load_data()
         print('load data complete')
@@ -97,13 +97,13 @@ class stock:
             i = 0
             print('\nend')
             self.save_data()
-code = 'A005930'
-get = dict()
-test = stock(False)
+# code = 'A005930'
+# get = dict()
+test = stock()
 # test.cybos_connect_module.login()
 # test.user_inform_data['my stock'] = test.stock_data_module.my_sotck_inform()
 # test.save_data()
-test.run()
+# test.run()
 # test.load_data()
 # print(test.user_inform_data['my stock'].keys())
 # print(test.stock_data_module.get_Stochastic_Slow(code)["SLOW K"])

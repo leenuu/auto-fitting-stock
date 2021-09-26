@@ -1,5 +1,5 @@
 from datetime import datetime, date, timedelta
-from stock_buy_sell import stock_buy_sell
+from stock_main.stock_buy_sell import stock_buy_sell
 
 class analysis_stock:
     def __init__(self):
@@ -51,7 +51,7 @@ class analysis_stock:
             
             elif yesterday_low < yesterday_p and now_low > now_p:
                 status = self.stock_buy_sell_module.sell(code, my_stock[code]['amount'])
-                if status == 0:
+                if status == 0: 
                     return ['sell success']
                 else:
                     return ['fail']
