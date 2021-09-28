@@ -1,9 +1,9 @@
 from datetime import datetime, date, timedelta
-from stock_main.stock_buy_sell import stock_buy_sell
+import stock_buy_sell
 
 class analysis_stock:
     def __init__(self):
-        self.stock_buy_sell_module = stock_buy_sell()
+        self.stock_buy_sell_module = stock_buy_sell.stock_buy_sell()
 
     def analysis_data(self, bb, stc):
         

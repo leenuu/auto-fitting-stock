@@ -92,7 +92,7 @@ class stock_data:
         self.user_inform_client.BlockRequest()
  
         cnt = self.user_inform_client.GetHeaderValue(7)
- 
+        print(cnt)
         for i in range(cnt):
             code = self.user_inform_client.GetDataValue(12, i)  # 종목코드
             name = self.user_inform_client.GetDataValue(0, i)  # 종목명

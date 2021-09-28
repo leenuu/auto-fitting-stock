@@ -34,7 +34,7 @@ class stock_buy_sell:
         rqRet = self.Stock_Order_client.GetDibMsg1()
         print("\nstatus : ", rqStatus, rqRet)
         if rqStatus == -1:
-            print('fail')
+            print('fail : ' + code)
         else:
             print('buy : ' + code, location)
             self.add_log(f'buy {code} : {number}, {location}')
@@ -69,7 +69,7 @@ class stock_buy_sell:
         rqRet = self.Stock_Order_client.GetDibMsg1()
         print("\nstatus : ", rqStatus, rqRet)
         if rqStatus == -1:
-            print('fail')
+            print(f'fail : {code}, number : {number}')
         else:
             print('sell : ' + code)
             self.add_log(f'sell {code} : {number}')
