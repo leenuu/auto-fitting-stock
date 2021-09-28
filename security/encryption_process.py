@@ -1,5 +1,4 @@
 from cryptography.fernet import Fernet
-from tkinter import filedialog
 
 class encryption_pro:
     def __init__(self):
@@ -30,3 +29,16 @@ class encryption_pro:
 
         except Exception as e:
             print(e) 
+
+
+
+
+    
+
+
+
+
+
+
+
+    
