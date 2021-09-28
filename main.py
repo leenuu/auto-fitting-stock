@@ -1,6 +1,12 @@
-from stock_main.stock_main import stock
+import sys, os
+sys.path.append(os.path.abspath('stock_main'))
+sys.path.append(os.path.abspath('security'))
+from stock_main import stock_main
 
 if __name__ == "__main__":
-    stocks = stock()
-    stocks.run()
+    stocks = stock_main.stock()
+    # stocks.cybos_connect_module.login()
+    stocks.load_data()
+    stocks.save_data()
+    # stocks.run()
     # test = cybos_connect()
