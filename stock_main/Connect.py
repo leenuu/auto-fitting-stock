@@ -1,12 +1,12 @@
 from pywinauto import application
-import win32com.client, time, os
-# sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-from security.encryption_process import encryption_pro
+import win32com.client, time, os, sys
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+from security import encryption_process
 
 class cybos_connect:
     def login(self):
         status = False
-        login_system = encryption_pro()
+        login_system = encryption_process.encryption_pro()
         user_inform = login_system.get_key_file()
         
         if user_inform == 0:
@@ -37,7 +37,7 @@ class cybos_connect:
             app.start(f'C:\DAISHIN\STARTER\\ncStarter.exe /prj:cp /id:{id} /pwd:{pwd} /pwdcert:{pwdcert} /autostart')
         elif status == False:
             app.start(f'C:\DAISHIN\STARTER\\ncStarter.exe /prj:cp /id:{id} /pwd:{pwd} /pwdcert: /autostart')            
-        input("when starting task is complete, press any key......")
+        input("When starting task is complete, Press Enter key......")
     
     def connect_test(self):
         print("start PLUS Connect test")
@@ -48,8 +48,3 @@ class cybos_connect:
             exit()
         else:
             print("PLUS Connect Complete")
-    
-    def timer(self):
-        for i in range(90):
-            print(f"\r{90 - i} ", end='')
-            time.sleep(1)
