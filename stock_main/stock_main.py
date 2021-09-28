@@ -1,18 +1,17 @@
-from stock_main.analysis_stock import analysis_stock
-from stock_main.stock_data import stock_data
-from stock_main.Connect import cybos_connect
+from typing import Counter
+import Connect, analysis_stock, stock_data
 import time
 from datetime import datetime
 
 class stock:
     def __init__(self):
-        self.cybos_connect_module = cybos_connect()
-        self.analysis_stock_module = analysis_stock()
-        self.stock_data_module = stock_data()
+        self.cybos_connect_module = Connect.cybos_connect()
+        self.analysis_stock_module = analysis_stock.analysis_stock()
+        self.stock_data_module = stock_data.stock_data()
         self.stock_data, self.kospi, self.kosdaqm ,self.user_inform_data = dict(), dict(), dict(), dict()
         self.id, self.pwd, self.pwdcert = '', '', ''
         self.stock_code = list()
-        # self.status = status
+        self.buy_times ,self.sell_times = True, False
 
     def load_data(self):
         try:
@@ -29,95 +28,74 @@ class stock:
 
     def judgment(self, code, times):
         try:
-
-            sell_on = False
-            buy_on = True
-            if times == 1:
-                sell_on = True
-                buy_on = False
+            if times == 'sell':
+                self.buy_times ,self.sell_times = False, True
             stc = self.stock_data_module.get_Stochastic_Slow(code)['SLOW K']
             bb = self.stock_data_module.get_bollinger_bands(code)
             data = self.analysis_stock_module.analysis_data(bb, stc)      
             user_data = self.user_inform_data['my stock']
-            status = self.analysis_stock_module.judgment_B_S(code, data, user_data, sell_on, buy_on)
+            status = self.analysis_stock_module.judgment_B_S(code, data, user_data, self.sell_times, self.buy_times)
             return status
+
         except Exception as e:
             print(e)
             return None
 
-    def run(self):
+    def get_times(self, times):
+        now_h = datetime.now().hour
+        now_m = datetime.now().minute
+        sell_time_h = 14
+        sell_time_m = 30
+        if now_m >= sell_time_m and now_h >= sell_time_h:
+            self.stock_code = list(self.user_inform_data['my stock'].keys())
+            status = 'sell'
+        else:
+            status = 'buy'
+        return status
+
+    def set_up(self):
         self.cybos_connect_module.login() 
         print('start load data')
         self.load_data()
         print('load data complete')
-        st = len(self.stock_code)
-        i , times = 0, 0
-        print('check time')
+
+    def run(self):
+        stock_len = len(self.stock_code)
+        full_stock = False
+        times = 'buy'
+        print('check time', end='')
         while True:
-            if datetime.now().hour < 9:
-                print('\rnot time     ', end='')
-                time.sleep(59)
-                print('\rcheck time   ', end='')
-                time.sleep(1)
-                continue
-            
+            stock_number = 0
             if type(self.stock_code) != list:
-                print('err')
-                self.stock_code.remove(code)
-                continue
+                print('error')
+                break
             
+            if full_stock:
+                times = 'sell'
+
             print('\nstart')
             for code in self.stock_code:
-                now_h = datetime.now().hour
-                now_m = datetime.now().minute
-                sell_time_h = 14
-                sell_time_m = 30
-                if now_m >= sell_time_m and now_h >= sell_time_h and times == 0 :
-                    self.stock_code = list(self.user_inform_data['my stock'].keys())
-                    # print(self.stock_code)
-                    st = len(self.stock_code)
-                    times = 1
+                stock_len = len(self.stock_code)
+                times = self.get_times()
+
+                if times == 'buy' and len(self.user_inform_data['my stock']) == 50:
+                    full_stock = True
                     break
-                    
-                # print(1)
-                # if now >= sell_time :
-                #     break
                 status = self.judgment(code, times)
-                # print(status)
                 if status == None:
+                    self.stock_code.remove(code)
                     pass
                 elif status[0] == 'buy success':
                     self.user_inform_data['my stock'][code] = {'amount': status[1], 'buy location' : status[2]}
+                    self.stock_code.remove(code)
+                    self.save_data()
                 elif status[0] == 'sell success':
                     del self.user_inform_data['my stock'][code]
-                i += 1
-                print(f'\r{i}/{st}       ', end='')
+                    self.stock_code.remove(code)
+                    self.save_data()
+                stock_number += 1
+                print(f'\r{stock_number}/{stock_len}       ', end='')
                 time.sleep(0.251)
-
-            i = 0
-            print('\nend')
             self.save_data()
-# code = 'A005930'
-# get = dict()
-# test = stock()
-# test.cybos_connect_module.login()
-# test.user_inform_data['my stock'] = test.stock_data_module.my_sotck_inform()
-# test.save_data()
-# test.run()
-# test.load_data()
-# print(test.user_inform_data['my stock'].keys())
-# print(test.stock_data_module.get_Stochastic_Slow(code)["SLOW K"])
-
-# a = test.stock_data_module.get_Stochastic_Slow('A014915')['SLOW K']
-# print(a[len(a)-1])
-# print(a[len(a)-2])
-# test.stock_data_module.check_all_stocks_code()
-# test.load_data()
-# test.judgment(code)
-# test.load_data()
-# print(test.user_inform_data['my stock'])
-# test.cybos_connect_module.login()
-# print(test.stock_data_module.get_Stochastic_Slow(code))
-
-
-
+            print('\nend')
+            
