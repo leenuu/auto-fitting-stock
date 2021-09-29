@@ -1,3 +1,4 @@
+from stock.util import recommend
 import time
 from util import *
 from basic import stock_data
@@ -8,6 +9,7 @@ class stock:
         self.cybos_connect_module = Connect.cybos_connect()
         self.analysis_stock_module = analysis_stock.analysis_stock()
         self.stock_data_module = stock_data.stock_data()
+        self.stock_recommend_module = recommend.stock_recommend()
         self.stock_data, self.kospi, self.kosdaqm ,self.user_inform_data = dict(), dict(), dict(), dict()
         self.id, self.pwd, self.pwdcert = '', '', ''
         self.stock_code = list()
@@ -20,7 +22,13 @@ class stock:
         except FileNotFoundError:
             self.user_inform_data['my stock'] = self.stock_data_module.my_sotck_inform()
 
-        self.stock_code = self.stock_data_module.check_all_stocks_code()['kospi codes']
+        self.load_codes('kospi200')
+    
+    def load_codes(self, status):
+        if status == 'all':
+            self.stock_code = self.stock_recommend_module.check_all_stocks_code()['kospi codes']
+        elif status == 'kospi200':
+            self.stock_code = self.stock_recommend_module.check_kospi200(self.stock_recommend_module.check_all_stocks_code()['kospi codes'])
 
     def save_data(self):
         data = self.user_inform_data['my stock']
