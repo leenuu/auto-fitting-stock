@@ -11,21 +11,6 @@ class stock_data:
         self.CpSeries_client = win32com.client.Dispatch("CpIndexes.CpSeries")
         self.stock_index_client = win32com.client.Dispatch("CpIndexes.CpIndex")
         
-    def check_all_stocks_code(self):
-        kospi = self.stock_code_client.GetStockListByMarket(1)
-        kosdaq = self.stock_code_client.GetStockListByMarket(2)
-        kospi_codes, kosdaq_codes = list(), list()
-        kospi_name, kosdaq_name = dict(), dict()
-        for code in kospi:
-            name = self.stock_code_client.CodeToName(code)
-            # print(name)
-            # if '바이오' in name:
-                # print(name)
-            kospi_name.update({code : name})
-            kospi_codes.append(code)
-
-        return {'kospi codes' : kospi_codes, 'kospi name' : kospi_name} 
-
     def get_stock_data(self, code, day):
         self.chart_data_client.SetInputValue(0, code)   
         self.chart_data_client.SetInputValue(1, ord('2')) 
