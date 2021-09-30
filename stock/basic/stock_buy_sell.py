@@ -1,11 +1,11 @@
 import win32com.client
+from datetime import datetime
 
 class stock_buy_sell:        
     def __init__(self):
         self.stock_trade_client =  win32com.client.Dispatch("CpTrade.CpTdUtil")
         self.Stock_Order_client = win32com.client.Dispatch("CpTrade.CpTd0311")
         self.stock_mst_client = win32com.client.Dispatch('DsCbo1.StockMst')
-        self.log_data = ''
 
     def buy(self, code, number, location):
         initCheck = self.stock_trade_client.TradeInit(0)
@@ -37,7 +37,7 @@ class stock_buy_sell:
             print('fail : ' + code)
         else:
             print('buy : ' + code, location)
-            self.add_log(f'buy {code} : {number}, {location}')
+            self.add_log(f'{datetime.datetime.now()}-buy {code} : {number}, {location}')
         
         return rqStatus
 
@@ -72,7 +72,7 @@ class stock_buy_sell:
             print(f'fail : {code}, number : {number}')
         else:
             print('sell : ' + code)
-            self.add_log(f'sell {code} : {number}')
+            self.add_log(f'{datetime.datetime.now()}-sell {code} : {number}')
         
         return rqStatus
 
@@ -87,9 +87,11 @@ class stock_buy_sell:
         return self.stock_mst_client.GetHeaderValue(17)
 
     def add_log(self, st):
-        self.log_data += st + '\n'
-
-    def save_log(self):
-        f = open("log.txt",'w')
-        f.write(self.log_data)
-        f.close()
+        try:
+            f = open("log.txt",'a')
+            f.write(st)
+            f.close()
+        except FileNotFoundError:
+            f = open("log.txt",'w')
+            f.write(st)
+            f.close()
