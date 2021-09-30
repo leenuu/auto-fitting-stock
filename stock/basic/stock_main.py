@@ -25,10 +25,11 @@ class stock:
         self.load_codes('kospi200')
     
     def load_codes(self, status):
+        all_kospi_code = self.stock_recommend_module.check_all_stocks_code()['kospi codes']
         if status == 'all':
-            return self.stock_recommend_module.check_all_stocks_code()['kospi codes']
+            return all_kospi_code
         elif status == 'kospi200':
-            return self.stock_recommend_module.check_kospi200(self.stock_recommend_module.check_all_stocks_code()['kospi codes'])
+            return self.stock_recommend_module.check_kospi200(all_kospi_code)
 
     def save_data(self):
         data = self.user_inform_data['my stock']
