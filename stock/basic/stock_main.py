@@ -1,7 +1,6 @@
-from stock.util import recommend
 import time
-from util import *
-from basic import stock_data
+from stock.util import *
+from stock.basic import stock_data
 from datetime import datetime
 
 class stock:
@@ -33,7 +32,6 @@ class stock:
 
     def save_data(self):
         data = self.user_inform_data['my stock']
-        self.analysis_stock_module.stock_buy_sell_module.save_log()
         self.stock_data_module.save_user_stock_data(data)
 
     def judgment(self, code, times):
