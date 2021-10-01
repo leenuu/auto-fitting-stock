@@ -1,6 +1,6 @@
 from pywinauto import application
 import win32com.client, time, os
-from security import encryption_process
+from stock.security import encryption_process
 
 class cybos_connect:
     def login(self):

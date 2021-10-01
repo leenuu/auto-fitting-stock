@@ -1,5 +1,5 @@
 from datetime import datetime, date, timedelta
-from basic import stock_buy_sell
+from stock.basic import stock_buy_sell
 
 class analysis_stock:
     def __init__(self):

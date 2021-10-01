@@ -1,1 +1,1 @@
-__all__ = ['analysis_stock', 'Connect']
+__all__ = ['analysis_stock', 'Connect','recommend']
