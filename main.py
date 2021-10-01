@@ -1,12 +1,12 @@
 import sys, os
-sys.path.append(os.path.abspath('stock_main'))
-sys.path.append(os.path.abspath('security'))
-from stock_main import stock_main
+sys.path.append(os.path.abspath('stock'))
+from PyQt5 import QtCore, QtGui, QtWidgets
+from stock.gui import *
 
 if __name__ == "__main__":
-    stocks = stock_main.stock()
-    # stocks.cybos_connect_module.login()
-    stocks.load_data()
-    stocks.save_data()
-    # stocks.run()
-    # test = cybos_connect()
+    app = QtWidgets.QApplication(sys.argv)
+    Stock_gui = QtWidgets.QWidget()
+    ui = gui.Ui_Stock_gui()
+    ui.setupUi(Stock_gui)
+    Stock_gui.show()
+    sys.exit(app.exec_())
