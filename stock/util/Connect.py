@@ -3,21 +3,24 @@ import win32com.client, time, os
 from stock.security import encryption_process
 
 class cybos_connect:
-    def login(self):
-        status = False
+    def get_user_inform(self, path):
         login_system = encryption_process.encryption_pro()
-        user_inform = login_system.get_key_file()
+        status = login_system.get_key_file(path)
         
-        if user_inform == 0:
+        if status == 1:
             print("Invalid Key")
-            exit()
-
+            return 1
         print("Correct Key")
+
+        return status
+
+    def login(self, user_inform):
+        status = False
         self.taskkill()
         self.connect(user_inform["id"], user_inform["pwd"], user_inform["pwdcert"], status) #true online 
-        self.connect_test()
 
         return user_inform
+
 
     def taskkill(self):
         os.system('taskkill /IM ncStarter* /F /T')
@@ -36,7 +39,6 @@ class cybos_connect:
             app.start(f'C:\DAISHIN\STARTER\\ncStarter.exe /prj:cp /id:{id} /pwd:{pwd} /pwdcert:{pwdcert} /autostart')
         elif status == False:
             app.start(f'C:\DAISHIN\STARTER\\ncStarter.exe /prj:cp /id:{id} /pwd:{pwd} /pwdcert: /autostart')            
-        input("When starting task is complete, Press Enter key......")
     
     def connect_test(self):
         print("start PLUS Connect test")
