@@ -1,1 +1,1 @@
-__all__ = ['gui']
+__all__ = ['gui', 'stock_th']
