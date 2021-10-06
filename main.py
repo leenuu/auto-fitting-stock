@@ -1,6 +1,9 @@
 import sys, os
+import warnings
+warnings.simplefilter("ignore", UserWarning)
+sys.coinit_flags = 2
 sys.path.append(os.path.abspath('stock'))
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 from stock.gui import *
 
 if __name__ == "__main__":
