@@ -1,5 +1,6 @@
 import win32com.client
 from datetime import datetime
+from stock.util import stock_request
 
 class stock_buy_sell:        
     def __init__(self):
@@ -18,7 +19,9 @@ class stock_buy_sell:
         acc = self.stock_trade_client.AccountNumber[0]
         accFlag = self.stock_trade_client.GoodsList(acc, 1)  
         # print(acc, accFlag[0])
-        
+        objReply = stock_request.CpCurReply(self.Stock_Order_client, "CpTd0311")
+        objReply.Subscribe()
+                
         self.Stock_Order_client.SetInputValue(0, "2")   
         self.Stock_Order_client.SetInputValue(1, acc )  
         self.Stock_Order_client.SetInputValue(2, accFlag[0])   
@@ -28,7 +31,8 @@ class stock_buy_sell:
         self.Stock_Order_client.SetInputValue(7, "0")   
         self.Stock_Order_client.SetInputValue(8, "12")  
         
-        self.Stock_Order_client.BlockRequest()
+        self.Stock_Order_client.Request()
+        stock_request.MessagePump(10000)
         
         rqStatus = self.Stock_Order_client.GetDibStatus()
         rqRet = self.Stock_Order_client.GetDibMsg1()
@@ -37,7 +41,7 @@ class stock_buy_sell:
             print('fail : ' + code)
         else:
             print('buy : ' + code, location)
-            self.add_log(f'{datetime.datetime.now()}-buy {code} : {number}, {location}')
+            self.add_log(f'{datetime.now()}-buy {code} : {number}, {location}')
         
         return rqStatus
 
@@ -54,6 +58,9 @@ class stock_buy_sell:
         accFlag = self.stock_trade_client.GoodsList(acc, 1)  
         print(acc, accFlag[0])
 
+        objReply = stock_request.CpCurReply(self.Stock_Order_client, "CpTd0311")
+        objReply.Subscribe()
+
         self.Stock_Order_client.SetInputValue(0, "1")   
         self.Stock_Order_client.SetInputValue(1, acc )  
         self.Stock_Order_client.SetInputValue(2, accFlag[0])   
@@ -63,7 +70,8 @@ class stock_buy_sell:
         self.Stock_Order_client.SetInputValue(7, "0")   
         self.Stock_Order_client.SetInputValue(8, "12")  
         
-        self.Stock_Order_client.BlockRequest()
+        self.Stock_Order_client.Request()
+        stock_request.MessagePump(10000)
         
         rqStatus = self.Stock_Order_client.GetDibStatus()
         rqRet = self.Stock_Order_client.GetDibMsg1()
@@ -72,18 +80,26 @@ class stock_buy_sell:
             print(f'fail : {code}, number : {number}')
         else:
             print('sell : ' + code)
-            self.add_log(f'{datetime.datetime.now()}-sell {code} : {number}')
+            self.add_log(f'{datetime.now()}-sell {code} : {number}')
         
         return rqStatus
 
     def get_sell_price(self, code):
+        objReply = stock_request.CpCurReply(self.stock_mst_client, "StockMst")
+        objReply.Subscribe()
         self.stock_mst_client.SetInputValue(0, code)  
-        self.stock_mst_client.BlockRequest() 
+        self.stock_mst_client.Request() 
+        stock_request.MessagePump(10000)
+
         return self.stock_mst_client.GetHeaderValue(16)
     
     def get_buy_price(self, code):
-        self.stock_mst_client.SetInputValue(0, code)   
-        self.stock_mst_client.BlockRequest()
+        objReply = stock_request.CpCurReply(self.stock_mst_client, "StockMst")
+        objReply.Subscribe()
+        self.stock_mst_client.SetInputValue(0, code)  
+        self.stock_mst_client.Request() 
+        stock_request.MessagePump(10000)
+        
         return self.stock_mst_client.GetHeaderValue(17)
 
     def add_log(self, st):

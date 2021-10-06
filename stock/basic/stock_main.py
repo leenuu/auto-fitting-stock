@@ -13,22 +13,23 @@ class stock:
         self.id, self.pwd, self.pwdcert = '', '', ''
         self.stock_code = list()
         self.buy_times ,self.sell_times = True, False
-        self.set_up()
 
-    def load_data(self):
+    def load_data(self, kind):
         try:
             self.user_inform_data['my stock'] = self.stock_data_module.load_user_stock_data()
         except FileNotFoundError:
             self.user_inform_data['my stock'] = self.stock_data_module.my_sotck_inform()
 
-        self.load_codes('kospi200')
+        self.stock_code = self.load_codes(kind)
     
-    def load_codes(self, status):
+    def load_codes(self, kind):
         all_kospi_code = self.stock_recommend_module.check_all_stocks_code()['kospi codes']
-        if status == 'all':
+        if kind == 'all':
             return all_kospi_code
-        elif status == 'kospi200':
+        elif kind == 'kospi200':
             return self.stock_recommend_module.check_kospi200(all_kospi_code)
+        elif kind == 'auto':
+            return 0
 
     def save_data(self):
         data = self.user_inform_data['my stock']
@@ -40,7 +41,7 @@ class stock:
                 self.buy_times ,self.sell_times = False, True
             stc = self.stock_data_module.get_Stochastic_Slow(code)['SLOW K']
             bb = self.stock_data_module.get_bollinger_bands(code)
-            data = self.analysis_stock_module.analysis_data(bb, stc)      
+            data = self.analysis_stock_module.analysis_data(bb, stc) 
             user_data = self.user_inform_data['my stock']
             status = self.analysis_stock_module.judgment_B_S(code, data, user_data, self.sell_times, self.buy_times)
             return status
@@ -49,7 +50,7 @@ class stock:
             print(e)
             return None
 
-    def get_times(self, times):
+    def get_times(self):
         now_h = datetime.now().hour
         now_m = datetime.now().minute
         sell_time_h = 14
@@ -61,49 +62,12 @@ class stock:
             status = 'buy'
         return status
 
-    def set_up(self):
-        self.cybos_connect_module.login() 
-        print('start load data')
-        self.load_data()
-        print('load data complete')
+    def set_up(self, path):
+        status = self.cybos_connect_module.get_user_inform(path) 
+        if status == 1:
+            return 'fail'
+        self.user_inform_data['key'] = status
 
-    def run(self):
-        stock_len = len(self.stock_code)
-        full_stock = False
-        times = 'buy'
-        print('check time', end='')
-        while True:
-            stock_number = 0
-            if type(self.stock_code) != list:
-                print('error')
-                break
-            
-            if full_stock:
-                times = 'sell'
+        return 'complete'
 
-            print('\nstart')
-            for code in self.stock_code:
-                stock_len = len(self.stock_code)
-                times = self.get_times()
-
-                if times == 'buy' and len(self.user_inform_data['my stock']) == 50:
-                    full_stock = True
-                    break
-                status = self.judgment(code, times)
-                if status == None:
-                    self.stock_code.remove(code)
-                    pass
-                elif status[0] == 'buy success':
-                    self.user_inform_data['my stock'][code] = {'amount': status[1], 'buy location' : status[2]}
-                    self.stock_code.remove(code)
-                    self.save_data()
-                elif status[0] == 'sell success':
-                    del self.user_inform_data['my stock'][code]
-                    self.stock_code.remove(code)
-                    self.save_data()
-                stock_number += 1
-                print(f'\r{stock_number}/{stock_len}       ', end='')
-                time.sleep(0.251)
-            self.save_data()
-            print('\nend')
             

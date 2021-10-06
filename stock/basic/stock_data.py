@@ -1,5 +1,6 @@
 import win32com.client, numpy, json
 import pandas as pd
+from stock.util import stock_request
 
 class stock_data:
     def __init__(self):
@@ -10,15 +11,19 @@ class stock_data:
         self.stock_trade_client =  win32com.client.Dispatch("CpTrade.CpTdUtil")
         self.CpSeries_client = win32com.client.Dispatch("CpIndexes.CpSeries")
         self.stock_index_client = win32com.client.Dispatch("CpIndexes.CpIndex")
-        
+
     def get_stock_data(self, code, day):
+        objReply = stock_request.CpCurReply(self.chart_data_client, "StockChart")
+        objReply.Subscribe()
+
         self.chart_data_client.SetInputValue(0, code)   
         self.chart_data_client.SetInputValue(1, ord('2')) 
         self.chart_data_client.SetInputValue(4, day)
         self.chart_data_client.SetInputValue(5, [0,2,3,4,5, 8]) 
         self.chart_data_client.SetInputValue(6, ord('D')) 
         self.chart_data_client.SetInputValue(9, ord('1')) 
-        self.chart_data_client.BlockRequest()
+        self.chart_data_client.Request() 
+        stock_request.MessagePump(10000)
 
         count = self.chart_data_client.GetHeaderValue(3)
         columns = ['open', 'high', 'low', 'close']
@@ -71,11 +76,15 @@ class stock_data:
         acc = self.stock_trade_client.AccountNumber[0]
         accFlag = self.stock_trade_client.GoodsList(acc, 1)
         
+        objReply = stock_request.CpCurReply(self.user_inform_client, "CpTd6033")
+        objReply.Subscribe()
+
         self.user_inform_client.SetInputValue(0, acc)
         self.user_inform_client.SetInputValue(1, accFlag[0])
         self.user_inform_client.SetInputValue(2, 50)
 
-        self.user_inform_client.BlockRequest()
+        self.user_inform_client.Request() 
+        stock_request.MessagePump(10000)
  
         cnt = self.user_inform_client.GetHeaderValue(7)
         # print(cnt)
@@ -95,6 +104,7 @@ class stock_data:
 
     def get_Stochastic_Slow(self, code):
         chart_value = dict()
+
         self.set_data_Stochastic_Slow(code, 21, self.CpSeries_client)
         self.stock_index_client.series = self.CpSeries_client
         self.stock_index_client.put_IndexKind("Stochastic Slow")  
@@ -118,13 +128,20 @@ class stock_data:
         return chart_value
 
     def set_data_Stochastic_Slow(self, code, cnt, CpSeries_client):
+
+        objReply = stock_request.CpCurReply(self.chart_data_client, "StockChart")
+        objReply.Subscribe()
+
         self.chart_data_client.SetInputValue(0, code)
         self.chart_data_client.SetInputValue(1, ord('2'))
         self.chart_data_client.SetInputValue(4, cnt) 
         self.chart_data_client.SetInputValue(5, [0, 2, 3, 4, 5, 8])  
         self.chart_data_client.SetInputValue(6, ord('D'))  
-        self.chart_data_client.SetInputValue(9, ord('1'))  
-        self.chart_data_client.BlockRequest()
+        self.chart_data_client.SetInputValue(9, ord('1')) 
+        
+        self.chart_data_client.Request() 
+        stock_request.MessagePump(10000)
+        
         len = self.chart_data_client.GetHeaderValue(3)
 
         for i in range(len):
