@@ -1,6 +1,7 @@
 import win32com.client, numpy, json
 import pandas as pd
 from stock.util import stock_request
+from time import sleep
 
 class stock_data:
     def __init__(self):
@@ -24,7 +25,7 @@ class stock_data:
         self.chart_data_client.SetInputValue(9, ord('1')) 
         self.chart_data_client.Request() 
         stock_request.MessagePump(10000)
-
+        sleep(1)
         count = self.chart_data_client.GetHeaderValue(3)
         columns = ['open', 'high', 'low', 'close']
         index = []
@@ -85,7 +86,7 @@ class stock_data:
 
         self.user_inform_client.Request() 
         stock_request.MessagePump(10000)
- 
+        sleep(1)
         cnt = self.user_inform_client.GetHeaderValue(7)
         # print(cnt)
         for i in range(cnt):
@@ -141,7 +142,7 @@ class stock_data:
         
         self.chart_data_client.Request() 
         stock_request.MessagePump(10000)
-        
+        sleep(1)
         len = self.chart_data_client.GetHeaderValue(3)
 
         for i in range(len):

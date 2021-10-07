@@ -1,3 +1,4 @@
+from time import sleep
 import win32com.client
 from datetime import datetime
 from stock.util import stock_request
@@ -34,6 +35,8 @@ class stock_buy_sell:
         self.Stock_Order_client.Request()
         stock_request.MessagePump(10000)
         
+        sleep(1)
+
         rqStatus = self.Stock_Order_client.GetDibStatus()
         rqRet = self.Stock_Order_client.GetDibMsg1()
         print("\nstatus : ", rqStatus, rqRet)
@@ -72,15 +75,17 @@ class stock_buy_sell:
         
         self.Stock_Order_client.Request()
         stock_request.MessagePump(10000)
+
+        sleep(1)
         
         rqStatus = self.Stock_Order_client.GetDibStatus()
         rqRet = self.Stock_Order_client.GetDibMsg1()
         print("\nstatus : ", rqStatus, rqRet)
         if rqStatus == -1:
-            print(f'fail : {code}, number : {number}')
+            print(f'fail : {code}, number : {number}\n')
         else:
             print('sell : ' + code)
-            self.add_log(f'{datetime.now()}-sell {code} : {number}')
+            self.add_log(f'{datetime.now()}-sell {code} : {number}\n')
         
         return rqStatus
 
@@ -90,7 +95,7 @@ class stock_buy_sell:
         self.stock_mst_client.SetInputValue(0, code)  
         self.stock_mst_client.Request() 
         stock_request.MessagePump(10000)
-
+        sleep(1)
         return self.stock_mst_client.GetHeaderValue(16)
     
     def get_buy_price(self, code):
@@ -99,7 +104,7 @@ class stock_buy_sell:
         self.stock_mst_client.SetInputValue(0, code)  
         self.stock_mst_client.Request() 
         stock_request.MessagePump(10000)
-        
+        sleep(1)
         return self.stock_mst_client.GetHeaderValue(17)
 
     def add_log(self, st):
