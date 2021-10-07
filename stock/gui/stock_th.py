@@ -17,6 +17,7 @@ class stock_thread(QtCore.QThread):
         self.user_stock = dict()
         self.isRun = False
         self.kind = ''
+        self.error_dict = {"error" : -1}
         
     def run(self):
       if self.isRun:
@@ -31,7 +32,7 @@ class stock_thread(QtCore.QThread):
         print('check time', end='')
 
         while True:
-            stock_number = 0
+            stock_number = 1
                 
             if full_stock:
                 times = 'sell'
@@ -39,7 +40,7 @@ class stock_thread(QtCore.QThread):
             print('\nstart')
             for code in self.stock.stock_code:
                 stock_len = len(self.stock.stock_code)
-                print(f'\r{stock_number}/{stock_len}       ', end='')
+                print(f'\r{stock_number}/{stock_len}  ', end='')
                 if self.isRun == False:
                     break
                 
@@ -53,8 +54,19 @@ class stock_thread(QtCore.QThread):
 
                 if times == 'sell':
                     stock_len = len(self.stock.user_inform_data['my stock'])
+                
+                try:
+                    status = self.stock.judgment(code, times)
 
-                status = self.stock.judgment(code, times)
+                except Exception as error_msg:
+                    if str(error_msg) == "list.remove(x): x not in list":
+                        time.sleep(5)
+                        status = self.stock.judgment(code, times)
+                    else:
+                        self.isRun == False
+                        print(f"error : {error_msg}")
+                        self.threadEvent.emit(self.error_dict)
+                        time.sleep(1)
 
                 if status == None:
                     self.codes.remove(code)
@@ -64,19 +76,19 @@ class stock_thread(QtCore.QThread):
                     self.stock.user_inform_data['my stock'][code] = {'amount': status[1], 'buy location' : status[2]}
                     self.stock.stock_code.remove(code)
                     self.threadEvent.emit(self.stock.user_inform_data['my stock'])
-                    time.sleep(1)
-                
+                        
                 elif status[0] == 'sell success':
                     del self.user_stock[code]
                     self.stock.stock_code.remove(code)
                     self.threadEvent.emit(self.stock.user_inform_data['my stock'])
-                    time.sleep(1)
+                
 
                 stock_number += 1
 
-                print(f'\r{stock_number}/{len(self.stock.stock_code)}       ', end='')
+                # print(f'\r{stock_number}/{len(self.stock.stock_code)}       ', end='')
                 
-                time.sleep(0.5)
+                # time.sleep(0.251)
+                # print(f'\r                                                          ', end='')
 
             self.threadEvent.emit(self.stock.user_inform_data['my stock'])
 

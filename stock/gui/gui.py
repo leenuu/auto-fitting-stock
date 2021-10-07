@@ -12,6 +12,7 @@ class Ui_Stock_gui(object):
         self.test_th = stock_th.test()
         self.logined = False
         self.start_st = 0
+        self.error_dict = {"error" : -1}
 
     def setupUi(self, Stock_gui):
 
@@ -141,6 +142,9 @@ class Ui_Stock_gui(object):
         self.Kospi_200.setDisabled(False)
 
     def get_data(self, data):
+        if data == self.error_dict:
+            self.stop()
+
         self.stock.user_inform_data['my stock'] = data
         self.stock.save_data()
 
