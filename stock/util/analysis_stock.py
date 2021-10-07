@@ -32,7 +32,7 @@ class analysis_stock:
         now_high, now_low, now_mid, yesterday_high, yesterday_low, yesterday_mid= data['high'], data['low'], data['mid'], data['yesterday high'], data['yesterday low'], data['yesterday mid']
         bought_stock = list(my_stock.keys())
         # print(bought_stock)
-        
+        # print(code, now_p, end="")
         number = 1
         if sell_on and code in bought_stock:
             if yesterday_high > yesterday_p and now_p > now_high and my_stock[code]['buy location'] == 'mid':

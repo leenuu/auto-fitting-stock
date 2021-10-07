@@ -11,24 +11,23 @@ class CpEvent:
         self.caller = caller  # callback 을 위해 보관
  
     def OnReceived(self):
-        while True:
-            # 실시간 처리 - 현재가 주문 체결
-            if self.name == 'StockMst':
-                # print('recieved')
-                win32event.SetEvent(StopEvent)
-                return
-            elif self.name == 'StockChart':
-                # print('recieved')
-                win32event.SetEvent(StopEvent)
-                return
-            elif self.name == 'CpTd6033':
-                # print('recieved')
-                win32event.SetEvent(StopEvent)
-                return
-            elif self.name == 'CpTd0311':
-                # print('recieved')
-                win32event.SetEvent(StopEvent)
-                return
+        # 실시간 처리 - 현재가 주문 체결
+        if self.name == 'StockMst':
+            # print('recieved')
+            win32event.SetEvent(StopEvent)
+            return
+        elif self.name == 'StockChart':
+            # print('recieved')
+            win32event.SetEvent(StopEvent)
+            return
+        elif self.name == 'CpTd6033':
+            # print('recieved')
+            win32event.SetEvent(StopEvent)
+            return
+        elif self.name == 'CpTd0311':
+            # print('recieved')
+            win32event.SetEvent(StopEvent)
+            return
  
 class CpCurReply:
     def __init__(self, objEvent, name):
